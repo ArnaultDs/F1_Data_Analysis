@@ -112,5 +112,3 @@ def get_drivers_information(driver_url:str):
     page.close()
 
     return driver_info
-
-get_circuits_information('https://www.racing-statistics.com/en/circuits/a1-ring')
