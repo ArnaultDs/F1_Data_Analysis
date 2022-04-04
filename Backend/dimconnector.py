@@ -1,6 +1,8 @@
 import requests
 import re
 
+import pandas as pd
+
 from bs4 import BeautifulSoup
 
 def get_urls_from_website(website_url:str):
@@ -28,6 +30,7 @@ def get_circuits_information(circuit_url:str):
         retrn: dict
     """
     circuit_info = {}
+    url_info = {}
     page = requests.get(circuit_url)
     soup = BeautifulSoup(page.content, 'html.parser')
     circuit_id = circuit_url.rsplit(sep='/', maxsplit=1)[1]
@@ -45,14 +48,22 @@ def get_circuits_information(circuit_url:str):
 
     data_block = soup.find('div', {'class':'blocks blocks1'})
 
+    first_year, last_year = 0,0
     for row in data_block.find('table').find('tbody').find_all('tr'):
         label = 'course' + str(row.find('td').text)
         url = row.find('a')['href']
-        circuit_info[label] = url
+        url_info[label] = url
+        if first_year == 0 or int(re.search('(\d{4})', str(url)).group(1)) < first_year:
+            first_year = int(re.search('(\d{4})', str(url)).group(1))
+        if int(re.search('(\d{4})', str(url)).group(1)) > last_year: 
+            last_year = int(re.search('(\d{4})', str(url)).group(1))
+
+    circuit_info['first_year'] = first_year
+    circuit_info['last_year'] = last_year
 
     page.close()
 
-    return circuit_info
+    return circuit_info, url_info
 
 def get_constructors_information(constructor_url:str): 
     """"
@@ -112,3 +123,6 @@ def get_drivers_information(driver_url:str):
     page.close()
 
     return driver_info
+
+
+    

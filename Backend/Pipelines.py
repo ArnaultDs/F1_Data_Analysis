@@ -12,8 +12,9 @@ def pipelines():
     constructors_url = 'https://www.racing-statistics.com/en/f1-constructors'
     drivers_url = 'https://www.racing-statistics.com/en/f1-drivers'
 
+    create_db_files(circuits_url, 'circuits')
+    create_db_files(constructors_url, 'constructors')
     create_db_files(drivers_url, 'drivers')
-
 
 def create_db_files(website, file_name):
     config_file = 'C:\\Users\\adeso\\Documents\\Developpement\\Projets\\F1_Data_Analysis\\Backend\\config.ini'
@@ -24,17 +25,26 @@ def create_db_files(website, file_name):
     url_list = dimconnector.get_urls_from_website(website)
     for count, url in enumerate(url_list):
         if file_name == 'circuits':
-            info_dict = dimconnector.get_circuits_information(url)
+            info_dict, url_dict = dimconnector.get_circuits_information(url)
+            if count == 0: 
+                info_df = pd.DataFrame(columns=info_dict.keys())
+                url_df = pd.DataFrame(columns=url_dict.keys())
+            info_df = info_df.append(info_dict, ignore_index=True)
+            url_df = url_df.append(url_dict, ignore_index=True)
         if file_name == 'constructors':
             info_dict = dimconnector.get_constructors_information(url)
+            if count == 0: 
+                info_df = pd.DataFrame(columns=info_dict.keys())
+            info_df = info_df.append(info_dict, ignore_index=True)
         if file_name == 'drivers':
             info_dict = dimconnector.get_drivers_information(url)
-        
-        if count == 0: 
-            info_df = pd.DataFrame(columns=info_dict.keys())
-        info_df = info_df.append(info_dict, ignore_index=True)
+            if count == 0: 
+                info_df = pd.DataFrame(columns=info_dict.keys())
+            info_df = info_df.append(info_dict, ignore_index=True)
     
     save_to_json(info_df, db_dir, file_name)
+    if file_name == 'circuits':
+        save_to_json(url_df, db_dir, 'urls_' + str(file_name))
 
 def save_to_json(data_df:pd.DataFrame, dir:str, file_name:str): 
     """ 
